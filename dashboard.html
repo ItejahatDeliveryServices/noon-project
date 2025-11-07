@@ -45,6 +45,8 @@
 
 <script>
 // Configuration - Update these values according to your Google Sheets setup
+// WARNING: These credentials are exposed in client-side code. For production,
+// consider using a backend service or restricting API key permissions.
 const SHEET_ID = '1AGpZc2JY9Yd190bPmH2Twkxe2ZccuxjRySgw3RI_vFm2XEyzrTLewXH5';
 const API_KEY = 'oqecI-NOhnH-5Kc5z-WsTdT-afhX6-hkJyk-SXfO6-eRfBa';
 const SHEET_RANGE = 'Sheet1!A:M'; // A to M columns (13 columns)
@@ -105,11 +107,21 @@ fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_
         r[FIELD_INDEX.AVAILABLE] === 'Yes' || r[FIELD_INDEX.AVAILABLE] === 'نعم، متاح فوراً'
     ).length;
     
-    // Count today's applicants
-    const today = new Date().toDateString();
+    // Count today's applicants with improved date parsing
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset to start of day for comparison
+    
     const todayCount = rows.filter(r => {
         const timestamp = r[FIELD_INDEX.TIMESTAMP];
-        return timestamp && new Date(timestamp).toDateString() === today;
+        if (!timestamp) return false;
+        
+        try {
+            const applicantDate = new Date(timestamp);
+            applicantDate.setHours(0, 0, 0, 0);
+            return applicantDate.getTime() === today.getTime();
+        } catch (e) {
+            return false;
+        }
     }).length;
     
     // Emirate statistics

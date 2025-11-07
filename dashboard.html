@@ -40,25 +40,25 @@
 // ** تم تحديث الحقول هنا **
 const SHEET_ID = '1AGpZc2JY9Yd190bPmH2Twkxe2ZccuxjRySgw3RI_vFm2XEyzrTLewXH5';
 const API_KEY = 'oqecI-NOhnH-5Kc5z-WsTdT-afhX6-hkJyk-SXfO6-eRfBa';
-// ** تم تحديث النطاق إلى 13 عموداً (A:M) **
-fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:M?key=${API_KEY}`)
+// ** تم تحديث النطاق إلى 11 عموداً (A:K) **
+fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:K?key=${API_KEY}`)
  .then(r => r.json())
  .then(d => {
     const rows = d.values.slice(1); // تجاهل الهيدر
     const total = rows.length;
     
     // ** تم تحديث المؤشرات (Indices) بناءً على الهيكل الجديد **
-    // 8 = Owns Vehicle, 10 = Has Delivery Experience, 11 = Available Immediately, 5 = Emirate, 12 = Timestamp
-    const qualified = rows.filter(r => r[1] === 'Yes' || r[1] === 'نعم').length; // يمتلك مركبة
-    const experienced = rows.filter(r => r[2] === 'Yes' || r[2] === 'نعم').length; // لديه خبرة
-    const qualifiedAndExperienced = rows.filter(r => (r[1] === 'Yes' || r[1] === 'نعم') && (r[2] === 'Yes' || r[2] === 'نعم')).length;
-    const available = rows.filter(r => r[3] === 'Yes' || r[3] === 'نعم، متاح فوراً').length;
-    const today = rows.filter(r => new Date(r[4]).toDateString() === new Date().toDateString()).length;
+    // Column structure: 0=Name, 1=Phone, 2=Email, 3=Emirate, 4=License, 5=Residency, 6=Vehicle, 7=VehicleType, 8=DeliveryExp, 9=Available, 10=Timestamp
+    const qualified = rows.filter(r => r[6] === 'Yes' || r[6] === 'نعم').length; // يمتلك مركبة
+    const experienced = rows.filter(r => r[8] === 'Yes' || r[8] === 'نعم').length; // لديه خبرة
+    const qualifiedAndExperienced = rows.filter(r => (r[6] === 'Yes' || r[6] === 'نعم') && (r[8] === 'Yes' || r[8] === 'نعم')).length;
+    const available = rows.filter(r => r[9] === 'Yes' || r[9] === 'نعم، متاح فوراً').length;
+    const today = rows.filter(r => r[10] && new Date(r[10]).toDateString() === new Date().toDateString()).length;
     
     // إحصائيات الإمارة
     const emirates = {};
     rows.forEach(r => {
-        const emirate = r[5] || 'Unspecified';
+        const emirate = r[3] || 'Unspecified';
         emirates[emirate] = (emirates[emirate] || 0) + 1;
     });
     

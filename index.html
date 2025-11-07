@@ -14,8 +14,9 @@
     .salary { background:#fff; padding:15px; border-radius:10px; font-weight:bold; text-align:center; margin:20px 0; font-size:1.2em; border:2px solid #000; }
     .form-group { margin:15px 0; }
     label { display:block; font-weight:bold; margin-bottom:5px; }
-    input, select { width:100%; padding:12px; border:2px solid #000; border-radius:8px; font-size:1em; }
+    input, select { width:100%; padding:12px; border:2px solid #000; border-radius:8px; font-size:1em; box-sizing:border-box; }
     button { background:#111; color:#FFD600; padding:14px; width:100%; border:none; border-radius:8px; font-size:1.2em; font-weight:bold; cursor:pointer; }
+    button:hover { opacity: 0.9; }
     .wa-btn { background:#25D366; color:#222; text-align:center; padding:12px; border-radius:8px; text-decoration:none; display:block; margin:10px 0; font-weight:bold; }
     .wa-btn:focus, .wa-btn:hover { outline:2px solid #000; }
     .qr img { width:160px; border:3px solid #000; border-radius:10px; }
@@ -25,15 +26,42 @@
 </head>
 <body>
   <div class="container">
-  <div class="center-text">
+    <div class="center-text">
       <img src="https://upload.wikimedia.org/wikipedia/commons/3/39/Noon_Logo.png" width="80" alt="Noon">
       <h1>🚛 توظيف فوري: سائقي توصيل</h1>
     </div>
     <div class="salary">راتب: <strong>5,000 درهم</strong> + عمولة <strong>800–1,500 درهم</strong></div>
-      <!-- ...existing code for the rest of the form fields, but only one set, with unique ids... -->
-      <!-- ...existing code for the rest of the form fields, but only one set, with unique ids... -->
-      <!-- ...existing code for the rest of the form fields, but only one set, with unique ids... -->
-      <!-- تم حذف جميع التكرارات، الحقول أدناه نسخة واحدة فقط -->
+    
+    <form id="applyForm">
+      <div class="form-group">
+        <label for="fullName">الاسم الكامل (Full Name)</label>
+        <input type="text" id="fullName" name="Full Name" required placeholder="أدخل اسمك الكامل" title="يرجى إدخال الاسم الكامل" />
+      </div>
+      
+      <div class="form-group">
+        <label for="phone">رقم الهاتف (Phone Number)</label>
+        <input type="tel" id="phone" name="Phone Number" required placeholder="مثال: 0501234567" title="يرجى إدخال رقم الهاتف" />
+      </div>
+      
+      <div class="form-group">
+        <label for="email">البريد الإلكتروني (Email)</label>
+        <input type="email" id="email" name="Email" placeholder="example@email.com" title="يرجى إدخال البريد الإلكتروني" />
+      </div>
+      
+      <div class="form-group">
+        <label for="emirate">الإمارة (Emirate)</label>
+        <select id="emirate" name="Emirate" required title="يرجى اختيار الإمارة">
+          <option value="">اختر</option>
+          <option value="Dubai">دبي (Dubai)</option>
+          <option value="Abu Dhabi">أبوظبي (Abu Dhabi)</option>
+          <option value="Sharjah">الشارقة (Sharjah)</option>
+          <option value="Ajman">عجمان (Ajman)</option>
+          <option value="Ras Al Khaimah">رأس الخيمة (Ras Al Khaimah)</option>
+          <option value="Umm Al Quwain">أم القيوين (Umm Al Quwain)</option>
+          <option value="Fujairah">الفجيرة (Fujairah)</option>
+        </select>
+      </div>
+      
       <div class="form-group">
         <label for="license">هل لديك رخصة قيادة؟ (Has Driving License)</label>
         <select id="license" name="Has Driving License" required title="يرجى اختيار الإجابة">
@@ -42,6 +70,7 @@
           <option value="No">لا</option>
         </select>
       </div>
+      
       <div class="form-group">
         <label for="residency">هل لديك إقامة سارية؟ (Has Valid Residency)</label>
         <select id="residency" name="Has Valid Residency" required title="يرجى اختيار الإجابة">
@@ -50,6 +79,7 @@
           <option value="No">لا</option>
         </select>
       </div>
+      
       <div class="form-group">
         <label for="vehicle">هل تمتلك مركبة؟ (Owns Vehicle)</label>
         <select id="vehicle" name="Owns Vehicle" required title="يرجى اختيار الإجابة">
@@ -58,10 +88,12 @@
           <option value="No">لا</option>
         </select>
       </div>
+      
       <div class="form-group">
         <label for="vehicleType">نوع المركبة (Vehicle Type)</label>
-        <input id="vehicleType" name="Vehicle Type" placeholder="مثال: Sedan, SUV, No Vehicle" title="يرجى إدخال نوع المركبة أو لا يوجد" />
+        <input type="text" id="vehicleType" name="Vehicle Type" placeholder="مثال: Sedan, SUV, No Vehicle" title="يرجى إدخال نوع المركبة أو لا يوجد" />
       </div>
+      
       <div class="form-group">
         <label for="deliveryExp">هل لديك خبرة توصيل؟ (Has Delivery Experience)</label>
         <select id="deliveryExp" name="Has Delivery Experience" required title="يرجى اختيار الإجابة">
@@ -70,6 +102,7 @@
           <option value="No">لا</option>
         </select>
       </div>
+      
       <div class="form-group">
         <label for="available">هل أنت متاح فوراً؟ (Available Immediately)</label>
         <select id="available" name="Available Immediately" required title="يرجى اختيار الإجابة">
@@ -78,171 +111,59 @@
           <option value="Within One Month">لا (متاح خلال شهر)</option>
         </select>
       </div>
+      
       <button type="submit">إرسال الطلب</button>
     </form>
+    
     <output id="msg" aria-live="polite"></output>
+    
     <div class="qr center-text margin-25">
       <p><strong>أو امسح الكود:</strong></p>
       <img id="qr-img" src="" alt="رمز الاستجابة السريعة للتقديم" />
     </div>
+    
     <a href="https://wa.me/971569271366?text=مهتم%20بوظيفة%20سائق%20Noon" class="wa-btn" target="_blank" rel="noopener">واتساب 1</a>
     <a href="https://wa.me/971501764401?text=مهتم%20بوظيفة%20سائق%20Noon" class="wa-btn" target="_blank" rel="noopener">واتساب 2</a>
+    
     <div class="center-text margin-25">
       <p><strong>فيديو توضيحي:</strong></p>
       <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen title="فيديو توضيحي عن الوظيفة"></iframe>
     </div>
   </div>
-  <style>
-    .qr, .center-text { text-align: center; }
-    .margin-25 { margin: 25px 0; }
-  </style>
+  
   <script>
-    // تعريف المتغيرات مرة واحدة فقط
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwWFor1N4My8JcO-2YT-VcLXlDP7rcnLW023YXu4SkERfkuFrd3cPy45DMnwzSqjRId/exec";
     const BASE_URL = "https://noonrecruitment.github.io/drivers";
+    
     function generateQR() {
       const url = `${BASE_URL}?utm_source=qr&utm_campaign=nov2025`;
       document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(url)}`;
     }
+    
     document.getElementById('applyForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = new FormData(e.target);
       const msg = document.getElementById('msg');
       msg.style.display = 'block';
-      msg.style.background = '#d4edda'; msg.style.color = '#155724';
+      msg.style.background = '#d4edda';
+      msg.style.color = '#155724';
       msg.textContent = 'جاري الإرسال...';
+      
       try {
         const res = await fetch(WEB_APP_URL, { method: 'POST', body: data });
         const result = await res.json();
         msg.textContent = result.message;
-        if (result.success) e.target.reset();
-      } catch {
-        msg.style.background = '#f8d7da'; msg.style.color = '#721c24';
-        msg.textContent = 'فشل، حاول لاحقًا.';
+        if (result.success) {
+          e.target.reset();
+        }
+      } catch (error) {
+        msg.style.background = '#f8d7da';
+        msg.style.color = '#721c24';
+        msg.textContent = 'فشل الإرسال، حاول لاحقًا.';
       }
     });
+    
     generateQR();
   </script>
 </body>
 </html>
-  <div class="center-text margin-25">
-      <p><strong>فيديو توضيحي:</strong></p>
-      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen title="فيديو توضيحي عن الوظيفة"></iframe>
-    </div>
-  </div>
-  <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwWFor1N4My8JcO-2YT-VcLXlDP7rcnLW023YXu4SkERfkuFrd3cPy45DMnwzSqjRId/exec";
-    const BASE_URL = "https://noonrecruitment.github.io/drivers";
-    function generateQR() {
-      const url = `${BASE_URL}?utm_source=qr&utm_campaign=nov2025`;
-      document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(url)}`;
-    }
-    document.getElementById('applyForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const data = new FormData(e.target);
-      const msg = document.getElementById('msg');
-      msg.style.display = 'block';
-      msg.style.background = '#d4edda'; msg.style.color = '#155724';
-      msg.textContent = 'جاري الإرسال...';
-      try {
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: data });
-        const result = await res.json();
-        msg.textContent = result.message;
-        if (result.success) e.target.reset();
-      } catch {
-        msg.style.background = '#f8d7da'; msg.style.color = '#721c24';
-        msg.textContent = 'فشل، حاول لاحقًا.';
-      }
-    });
-    generateQR();
-  </script>
-</body>
- </html>
-            <option value="Fujairah">الفجيرة (Fujairah)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="license">هل لديك رخصة قيادة؟ (Has Driving License)</label>
-        <select id="license" name="Has Driving License" required title="يرجى اختيار الإجابة">
-          <option value="">اختر</option>
-          <option value="Yes">نعم</option>
-          <option value="No">لا</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="residency">هل لديك إقامة سارية؟ (Has Valid Residency)</label>
-        <select id="residency" name="Has Valid Residency" required title="يرجى اختيار الإجابة">
-          <option value="">اختر</option>
-          <option value="Yes">نعم</option>
-          <option value="No">لا</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="vehicle">هل تمتلك مركبة؟ (Owns Vehicle)</label>
-        <select id="vehicle" name="Owns Vehicle" required title="يرجى اختيار الإجابة">
-          <option value="">اختر</option>
-          <option value="Yes">نعم</option>
-          <option value="No">لا</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="vehicleType">نوع المركبة (Vehicle Type)</label>
-        <input id="vehicleType" name="Vehicle Type" placeholder="مثال: Sedan, SUV, No Vehicle" title="يرجى إدخال نوع المركبة أو لا يوجد" />
-      </div>
-      <div class="form-group">
-        <label for="deliveryExp">هل لديك خبرة توصيل؟ (Has Delivery Experience)</label>
-        <select id="deliveryExp" name="Has Delivery Experience" required title="يرجى اختيار الإجابة">
-          <option value="">اختر</option>
-          <option value="Yes">نعم</option>
-          <option value="No">لا</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="available">هل أنت متاح فوراً؟ (Available Immediately)</label>
-        <select id="available" name="Available Immediately" required title="يرجى اختيار الإجابة">
-          <option value="">اختر</option>
-          <option value="Yes">نعم، متاح فوراً</option>
-          <option value="Within One Month">لا (متاح خلال شهر)</option>
-        </select>
-      </div>
-      <button type="submit">إرسال الطلب</button>
-    </form>
-  <output id="msg" aria-live="polite"></output>
-    <div class="qr" style="text-align:center; margin:20px 0;">
-      <p><strong>أو امسح الكود:</strong></p>
-      <img id="qr-img" src="" alt="QR" />
-    </div>
-    <a href="https://wa.me/971569271366?text=مهتم%20بوظيفة%20سائق%20Noon" class="wa-btn">واتساب 1</a>
-    <a href="https://wa.me/971501764401?text=مهتم%20بوظيفة%20سائق%20Noon" class="wa-btn">واتساب 2</a>
-    <div style="margin:25px 0; text-align:center;">
-      <p><strong>فيديو توضيحي:</strong></p>
-  <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen title="فيديو توضيحي عن الوظيفة"></iframe>
-    </div>
-  </div>
-  <script>
-  // تعريف المتغيرات مرة واحدة فقط
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwWFor1N4My8JcO-2YT-VcLXlDP7rcnLW023YXu4SkERfkuFrd3cPy45DMnwzSqjRId/exec";
-  const BASE_URL = "https://noonrecruitment.github.io/drivers";
-    function generateQR() {
-      const url = `${BASE_URL}?utm_source=qr&utm_campaign=nov2025`;
-      document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(url)}`;
-    }
-    document.getElementById('applyForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const data = new FormData(e.target);
-      const msg = document.getElementById('msg');
-      msg.style.display = 'block';
-      msg.style.background = '#d4edda'; msg.style.color = '#155724';
-      msg.textContent = 'جاري الإرسال...';
-      try {
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: data });
-        const result = await res.json();
-        msg.textContent = result.message;
-        if (result.success) e.target.reset();
-      } catch {
-        msg.style.background = '#f8d7da'; msg.style.color = '#721c24';
-        msg.textContent = 'فشل، حاول لاحقًا.';
-      }
-    });
-    generateQR();
-  </script></body></html>

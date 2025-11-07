@@ -389,8 +389,12 @@ function switchLang(lang) {
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     
-    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent === lang.toUpperCase()) {
+            btn.classList.add('active');
+        }
+    });
     
     document.querySelectorAll('[data-en]').forEach(el => {
         el.textContent = el.getAttribute('data-' + lang);
@@ -416,10 +420,11 @@ function loadData() {
 function populateFilters() {
     const emirates = [...new Set(allData.map(r => r[3]).filter(Boolean))];
     const emirateSelect = document.getElementById('filter-emirate');
-    emirateSelect.innerHTML = '<option value="all">All</option>';
+    const options = ['<option value="all">All</option>'];
     emirates.forEach(e => {
-        emirateSelect.innerHTML += `<option value="${e}">${e}</option>`;
+        options.push(`<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`);
     });
+    emirateSelect.innerHTML = options.join('');
 }
 
 // Apply filters
@@ -537,18 +542,24 @@ function updateCharts(data) {
     const last7Days = [];
     for (let i = 6; i >= 0; i--) {
         const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-        last7Days.push(date.toISOString().split('T')[0]);
+        date.setHours(0, 0, 0, 0);
+        last7Days.push(date);
     }
     
     const trendData = last7Days.map(date => {
-        return data.filter(r => r[10] && r[10].startsWith(date)).length;
+        return data.filter(r => {
+            if (!r[10]) return false;
+            const rowDate = new Date(r[10]);
+            rowDate.setHours(0, 0, 0, 0);
+            return rowDate.getTime() === date.getTime();
+        }).length;
     });
     
     if (charts.trend) charts.trend.destroy();
     charts.trend = new Chart(document.getElementById('trend-chart'), {
         type: 'line',
         data: {
-            labels: last7Days.map(d => new Date(d).toLocaleDateString('en', { month: 'short', day: 'numeric' })),
+            labels: last7Days.map(d => d.toLocaleDateString('en', { month: 'short', day: 'numeric' })),
             datasets: [{
                 label: 'Applications',
                 data: trendData,
@@ -608,12 +619,12 @@ function updateRecentTable(data) {
     }
     
     tbody.innerHTML = recent.map(row => {
-        const name = row[0] || 'N/A';
-        const emirate = row[3] || 'N/A';
+        const name = escapeHtml(row[0] || 'N/A');
+        const emirate = escapeHtml(row[3] || 'N/A');
         const vehicle = (row[6] === 'Yes' || row[6] === 'نعم') ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-danger">No</span>';
         const experience = (row[8] === 'Yes' || row[8] === 'نعم') ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-danger">No</span>';
         const available = (row[9] === 'Yes' || row[9] === 'نعم، متاح فوراً') ? '<span class="badge badge-success">Immediate</span>' : '<span class="badge badge-warning">Later</span>';
-        const date = row[10] ? new Date(row[10]).toLocaleDateString() : 'N/A';
+        const date = row[10] ? escapeHtml(new Date(row[10]).toLocaleDateString()) : 'N/A';
         
         return `
             <tr>
@@ -626,6 +637,13 @@ function updateRecentTable(data) {
             </tr>
         `;
     }).join('');
+}
+
+// Helper function to escape HTML and prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // Initialize

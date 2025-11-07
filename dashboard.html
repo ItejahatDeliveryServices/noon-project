@@ -3,26 +3,33 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Noon Dashboard</title>
+    <title>Noon Dashboard - لوحة تحكم التوظيف</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { background:#f5f5f5; padding:20px; font-family:Arial, sans-serif; direction:rtl; text-align:right; }
-        h1 { text-align:center; color:#111; }
-        #stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; }
-        .stat-card { background:#fff; border:1px solid #ddd; border-radius:8px; padding:20px; box-shadow:0 2px 4px rgba(0,0,0,0.05); }
-        .stat-card h3 { margin-top:0; color:#005a9c; }
-        .stat-card p { font-size:2em; font-weight:bold; margin:0; }
+        body { background:#f5f5f5; padding:20px; font-family:'Cairo', Arial, sans-serif; direction:rtl; text-align:right; }
+        h1 { text-align:center; color:#111; margin-bottom:30px; }
+        #stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:30px; }
+        .stat-card { background:#fff; border:1px solid #ddd; border-radius:8px; padding:20px; box-shadow:0 2px 4px rgba(0,0,0,0.05); transition:transform 0.2s; }
+        .stat-card:hover { transform:translateY(-2px); box-shadow:0 4px 8px rgba(0,0,0,0.1); }
+        .stat-card h3 { margin-top:0; color:#005a9c; font-size:1.1em; }
+        .stat-card p { font-size:2em; font-weight:bold; margin:0; color:#111; }
         #charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:30px; }
+        #error-msg { background:#f8d7da; color:#721c24; padding:15px; border-radius:8px; text-align:center; display:none; margin:20px 0; }
+        #loading-msg { background:#d1ecf1; color:#0c5460; padding:15px; border-radius:8px; text-align:center; margin:20px 0; }
         @media (max-width:768px) { #charts-grid { grid-template-columns:1fr; } }
     </style>
 </head>
 <body>
-<h1>لوحة تحكم التوظيف - Noon (نسخة معدلة)</h1>
+<h1>📊 لوحة تحكم التوظيف - Noon</h1>
+
+<div id="loading-msg">جاري تحميل البيانات...</div>
+<div id="error-msg"></div>
+
 <div id="stats-grid">
-    <div class="stat-card"><h3>إجمالي المتقدمين</h3><p id="total-applicants">0</p></div>
-    <div class="stat-card"><h3>المؤهلين (سيارة+خبرة)</h3><p id="total-qualified">0</p></div>
-    <div class="stat-card"><h3>متاحين فوراً</h3><p id="total-available">0</p></div>
-    <div class="stat-card"><h3>متقدمين اليوم</h3><p id="total-today">0</p></div>
+    <div class="stat-card"><h3>إجمالي المتقدمين</h3><p id="total-applicants">--</p></div>
+    <div class="stat-card"><h3>المؤهلين (سيارة+خبرة)</h3><p id="total-qualified">--</p></div>
+    <div class="stat-card"><h3>متاحين فوراً</h3><p id="total-available">--</p></div>
+    <div class="stat-card"><h3>متقدمين اليوم</h3><p id="total-today">--</p></div>
 </div>
 
 <div id="charts-grid">
@@ -37,58 +44,131 @@
 </div>
 
 <script>
-// ** تم تحديث الحقول هنا **
+// Configuration - Update these values according to your Google Sheets setup
 const SHEET_ID = '1AGpZc2JY9Yd190bPmH2Twkxe2ZccuxjRySgw3RI_vFm2XEyzrTLewXH5';
 const API_KEY = 'oqecI-NOhnH-5Kc5z-WsTdT-afhX6-hkJyk-SXfO6-eRfBa';
-// ** تم تحديث النطاق إلى 13 عموداً (A:M) **
-fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:M?key=${API_KEY}`)
- .then(r => r.json())
+const SHEET_RANGE = 'Sheet1!A:M'; // A to M columns (13 columns)
+
+// Field indices based on form structure:
+// 0=Full Name, 1=Phone Number, 2=Email, 3=Emirate, 4=Has Driving License, 
+// 5=Has Valid Residency, 6=Owns Vehicle, 7=Vehicle Type, 8=Has Delivery Experience, 
+// 9=Available Immediately, 10=Timestamp
+const FIELD_INDEX = {
+    FULL_NAME: 0,
+    PHONE: 1,
+    EMAIL: 2,
+    EMIRATE: 3,
+    DRIVING_LICENSE: 4,
+    RESIDENCY: 5,
+    OWNS_VEHICLE: 6,
+    VEHICLE_TYPE: 7,
+    DELIVERY_EXP: 8,
+    AVAILABLE: 9,
+    TIMESTAMP: 10
+};
+
+function showError(message) {
+    const errorEl = document.getElementById('error-msg');
+    errorEl.textContent = message;
+    errorEl.style.display = 'block';
+    document.getElementById('loading-msg').style.display = 'none';
+}
+
+function hideLoading() {
+    document.getElementById('loading-msg').style.display = 'none';
+}
+
+fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_RANGE}?key=${API_KEY}`)
+ .then(r => {
+    if (!r.ok) throw new Error('فشل تحميل البيانات من Google Sheets');
+    return r.json();
+ })
  .then(d => {
-    const rows = d.values.slice(1); // تجاهل الهيدر
+    hideLoading();
+    
+    if (!d.values || d.values.length < 2) {
+        showError('لا توجد بيانات في الجدول');
+        return;
+    }
+    
+    const rows = d.values.slice(1); // Skip header row
     const total = rows.length;
     
-    // ** تم تحديث المؤشرات (Indices) بناءً على الهيكل الجديد **
-    // 8 = Owns Vehicle, 10 = Has Delivery Experience, 11 = Available Immediately, 5 = Emirate, 12 = Timestamp
-    const qualified = rows.filter(r => r[1] === 'Yes' || r[1] === 'نعم').length; // يمتلك مركبة
-    const experienced = rows.filter(r => r[2] === 'Yes' || r[2] === 'نعم').length; // لديه خبرة
-    const qualifiedAndExperienced = rows.filter(r => (r[1] === 'Yes' || r[1] === 'نعم') && (r[2] === 'Yes' || r[2] === 'نعم')).length;
-    const available = rows.filter(r => r[3] === 'Yes' || r[3] === 'نعم، متاح فوراً').length;
-    const today = rows.filter(r => new Date(r[4]).toDateString() === new Date().toDateString()).length;
+    // Calculate statistics using correct field indices
+    const hasVehicle = rows.filter(r => r[FIELD_INDEX.OWNS_VEHICLE] === 'Yes' || r[FIELD_INDEX.OWNS_VEHICLE] === 'نعم').length;
+    const hasExperience = rows.filter(r => r[FIELD_INDEX.DELIVERY_EXP] === 'Yes' || r[FIELD_INDEX.DELIVERY_EXP] === 'نعم').length;
+    const qualifiedBoth = rows.filter(r => 
+        (r[FIELD_INDEX.OWNS_VEHICLE] === 'Yes' || r[FIELD_INDEX.OWNS_VEHICLE] === 'نعم') && 
+        (r[FIELD_INDEX.DELIVERY_EXP] === 'Yes' || r[FIELD_INDEX.DELIVERY_EXP] === 'نعم')
+    ).length;
+    const available = rows.filter(r => 
+        r[FIELD_INDEX.AVAILABLE] === 'Yes' || r[FIELD_INDEX.AVAILABLE] === 'نعم، متاح فوراً'
+    ).length;
     
-    // إحصائيات الإمارة
+    // Count today's applicants
+    const today = new Date().toDateString();
+    const todayCount = rows.filter(r => {
+        const timestamp = r[FIELD_INDEX.TIMESTAMP];
+        return timestamp && new Date(timestamp).toDateString() === today;
+    }).length;
+    
+    // Emirate statistics
     const emirates = {};
     rows.forEach(r => {
-        const emirate = r[5] || 'Unspecified';
+        const emirate = r[FIELD_INDEX.EMIRATE] || 'غير محدد';
         emirates[emirate] = (emirates[emirate] || 0) + 1;
     });
     
-    // تحديث الأرقام في البطاقات
+    // Update stat cards
     document.getElementById('total-applicants').textContent = total;
-    document.getElementById('total-qualified').textContent = `${qualifiedAndExperienced} (${total ? Math.round(qualifiedAndExperienced/total*100) : 0}%)`;
+    document.getElementById('total-qualified').textContent = `${qualifiedBoth} (${total ? Math.round(qualifiedBoth/total*100) : 0}%)`;
     document.getElementById('total-available').textContent = `${available} (${total ? Math.round(available/total*100) : 0}%)`;
-    document.getElementById('total-today').textContent = today;
+    document.getElementById('total-today').textContent = todayCount;
     
-    // رسم بياني للمؤهلين
+    // Qualified chart (Doughnut)
     new Chart(document.getElementById('qualified-chart'), {
       type: 'doughnut',
       data: { 
-          labels: ['يمتلك مركبة', 'لديه خبرة', 'لا يمتلك', 'بدون خبرة'], 
-          datasets: [{ data: [qualified, experienced, total - qualified, total - experienced], backgroundColor: ['#28a745', '#007bff', '#dc3545', '#ffc107'] }] 
+          labels: ['يمتلك مركبة', 'لديه خبرة توصيل', 'لا يمتلك مركبة', 'بدون خبرة'], 
+          datasets: [{ 
+              data: [hasVehicle, hasExperience, total - hasVehicle, total - hasExperience], 
+              backgroundColor: ['#28a745', '#007bff', '#dc3545', '#ffc107'],
+              borderWidth: 2,
+              borderColor: '#fff'
+          }] 
       },
-      options: { responsive: true }
+      options: { 
+          responsive: true,
+          plugins: {
+              legend: { position: 'bottom' }
+          }
+      }
     });
     
-    // رسم بياني للإمارات
+    // Emirate chart (Pie)
     new Chart(document.getElementById('emirate-chart'), {
         type: 'pie',
         data: {
             labels: Object.keys(emirates),
             datasets: [{
                 data: Object.values(emirates),
-                backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d', '#343a40']
+                backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d', '#343a40'],
+                borderWidth: 2,
+                borderColor: '#fff'
             }]
         },
-        options: { responsive: true }
+        options: { 
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
     });
+  })
+  .catch(err => {
+      showError(`خطأ: ${err.message}`);
+      console.error('Dashboard error:', err);
   });
-</script></body></html>
+</script>
+</body>
+</html>

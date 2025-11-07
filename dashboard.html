@@ -418,7 +418,7 @@ function loadData() {
 
 // Populate filter dropdowns
 function populateFilters() {
-    const emirates = [...new Set(allData.map(r => r[3]).filter(Boolean))];
+    const emirates = [...new Set(allData.map(r => r[3]).filter(val => val != null && val !== ''))];
     const emirateSelect = document.getElementById('filter-emirate');
     const options = ['<option value="all">All</option>'];
     emirates.forEach(e => {
@@ -435,10 +435,10 @@ function applyFilters() {
     
     let filtered = allData.filter(row => {
         if (emirateFilter !== 'all' && row[3] !== emirateFilter) return false;
-        if (vehicleFilter === 'yes' && row[6] !== 'Yes' && row[6] !== 'نعم') return false;
-        if (vehicleFilter === 'no' && (row[6] === 'Yes' || row[6] === 'نعم')) return false;
-        if (experienceFilter === 'yes' && row[8] !== 'Yes' && row[8] !== 'نعم') return false;
-        if (experienceFilter === 'no' && (row[8] === 'Yes' || row[8] === 'نعم')) return false;
+        if (vehicleFilter === 'yes' && (!row[6] || (row[6] !== 'Yes' && row[6] !== 'نعم'))) return false;
+        if (vehicleFilter === 'no' && row[6] && (row[6] === 'Yes' || row[6] === 'نعم')) return false;
+        if (experienceFilter === 'yes' && (!row[8] || (row[8] !== 'Yes' && row[8] !== 'نعم'))) return false;
+        if (experienceFilter === 'no' && row[8] && (row[8] === 'Yes' || row[8] === 'نعم')) return false;
         return true;
     });
     
@@ -624,7 +624,14 @@ function updateRecentTable(data) {
         const vehicle = (row[6] === 'Yes' || row[6] === 'نعم') ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-danger">No</span>';
         const experience = (row[8] === 'Yes' || row[8] === 'نعم') ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-danger">No</span>';
         const available = (row[9] === 'Yes' || row[9] === 'نعم، متاح فوراً') ? '<span class="badge badge-success">Immediate</span>' : '<span class="badge badge-warning">Later</span>';
-        const date = row[10] ? escapeHtml(new Date(row[10]).toLocaleDateString()) : 'N/A';
+        
+        let dateStr = 'N/A';
+        if (row[10]) {
+            const dateObj = new Date(row[10]);
+            if (!isNaN(dateObj.getTime())) {
+                dateStr = escapeHtml(dateObj.toLocaleDateString());
+            }
+        }
         
         return `
             <tr>
@@ -633,7 +640,7 @@ function updateRecentTable(data) {
                 <td>${vehicle}</td>
                 <td>${experience}</td>
                 <td>${available}</td>
-                <td>${date}</td>
+                <td>${dateStr}</td>
             </tr>
         `;
     }).join('');
@@ -641,8 +648,11 @@ function updateRecentTable(data) {
 
 // Helper function to escape HTML and prevent XSS
 function escapeHtml(text) {
+    if (text == null || text === undefined) {
+        return 'N/A';
+    }
     const div = document.createElement('div');
-    div.textContent = text;
+    div.textContent = String(text);
     return div.innerHTML;
 }
 
